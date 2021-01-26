@@ -37,8 +37,11 @@ def read_assignment_frame(path):
           .rename(columns=str.lower)
           .rename(columns=lambda k: k.replace(" ", "_"))
           .assign(due_date=lambda k: k['due_date'].apply(pandas.Timestamp))
-          .fillna(0)
           )
+    fv = dict.fromkeys(df.columns, 0)
+    for col in KEY_COLS:
+        fv[col] = ''
+    df = df.fillna(fv)
     return df[HW_COLS]
 
 
@@ -58,11 +61,14 @@ def read_report_frame(fp):
     df = (pandas.read_csv(fp)
           .rename(columns=str.lower)
           .rename(columns=lambda k: k.replace(" ", "_"))
-          .fillna(0)
           )
     for col in df.columns:
         if re.search(PAT_POINTS, col):
             df[col] = to_points(df[col])
+    fv = dict.fromkeys(df.columns, 0)
+    for col in KEY_COLS:
+        fv[col] = ''
+    df = df.fillna(fv)
     return df
 
 
