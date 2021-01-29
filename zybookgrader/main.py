@@ -122,6 +122,7 @@ def read_frames(*fp_seq, assignment_fp=None):
 
 
 def apply_penalty(df, penalty):
+    df = df.copy()
     pen = penalty / 100
     for col in df.columns:
         if re.search(PAT_POINTS, col):
@@ -130,6 +131,7 @@ def apply_penalty(df, penalty):
 
 
 def set_full_grade(df, threshold):
+    df = df.copy()
     total_col = find(df.columns, 'total_')
     total_pts = findpointstotal(total_col)
     df = (df
@@ -148,6 +150,17 @@ def final_score(x, threshold=70):
         return 100
     else:
         return x['total']
+
+
+def day_summary(df):
+    total_col = find(df.columns, 'total_')
+    df_summary = pandas.crosstab(
+        index=[df[k] for k in KEY_COLS],
+        columns=df['day'],
+        values=df[total_col],
+        aggfunc='sum',
+        margins=True).reset_index()
+    return df_summary
 
 
 def make_parser():
@@ -183,13 +196,18 @@ def make_parser():
                         metavar="PATH",
                         default=OUTPUT_GRADES,
                         help="Write results to path (default: %(default)s)")
+    parser.add_argument("-O",
+                        "--output-summary",
+                        metavar="PATH",
+                        type=argparse.FileType('w'),
+                        default=OUTPUT_GRADES_FULL,
+                        help="Write daily point summary to path"
+                        " (default: %(default)s")
     return parser
 
 
-# Main entry point
-def main():
-    parser = make_parser()
-    args = parser.parse_args()
+# For scripts that do their own parsing
+def _main(args, parser):
     if len(args.reports_fp) > 1:
         print("Reading points from:")
         for fp in args.reports_fp:
@@ -197,8 +215,15 @@ def main():
     else:
         print("Reading points from: {}".format(args.reports_fp[0].name))
     df = read_frames(*args.reports_fp, assignment_fp=args.assignment_fp)
-    # df.to_csv("grades_by_day.csv", index=False)
-    # print("Written: grades_by_day.csv")
+    if len(args.reports_fp) > 1:
+        print("Computing total points by day...")
+        df_2 = day_summary(df)
+        df_2.to_csv(args.output_summary, index=False)
+        print("Written: {}".format(args.output_summary.name))
+    else:
+        # clean up
+        args.output_summary.close()
+        os.delete(args.output_summary)
     if args.assignment_fp is not None:
         print("Reading due dates from: {}".format(args.assignment_fp.name))
         print("Applying -{}%/day penalty...".format(args.penalty)) 
@@ -207,6 +232,14 @@ def main():
     df = set_full_grade(df, args.threshold)
     df.to_csv(args.output, index=False)
     print("Written: {}".format(args.output.name))
+    return df
+
+
+# Main entry point
+def main():
+    parser = make_parser()
+    args = parser.parse_args()
+    return _main(args, parser)
 
 
 if __name__ == '__main__':
