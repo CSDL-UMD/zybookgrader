@@ -277,10 +277,10 @@ def summarize(df):
     total_col = find(df.columns, 'total_')
     df_summary = pandas.crosstab(
         index=[df[k] for k in KEY_COLS],
-        columns=df['day'],
+        columns=df['days_late'],
         values=df[total_col],
         aggfunc='sum',
-        margins=True).reset_index()
+        margins=True).reset_index().fillna(0)
     return df_summary
 
 
