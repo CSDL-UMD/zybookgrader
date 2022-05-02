@@ -2,6 +2,7 @@
 
 import os
 import datetime
+import dateutil.tz
 import sys
 import re
 import argparse
@@ -17,7 +18,7 @@ KEY_COLS = [
 ]
 
 # patterns
-PAT_TS = '\d\d\d\d-\d\d-\d\d_\d\d\d\d'
+PAT_TS = '(?P<timestamp>\d\d\d\d-\d\d-\d\d_\d\d\d\d)(_(?P<tz>[^.]*))?'
 PAT_TS_STRPTIME = '%Y-%m-%d_%H%M'
 PAT_POINTS = '\((?P<pts>\d+)\)$'
 
@@ -126,8 +127,12 @@ def matchdatefromfilename(s):
         print("Error: not a valid grade file: {}".format(s),
                 file=sys.stderr)
         sys.exit(1)
-    ts = m.group()
+    groups = m.groupdict()
+    ts = groups['timestamp']
     ts = datetime.datetime.strptime(ts, PAT_TS_STRPTIME)
+    if 'tz' in groups and groups['tz'] is not None:
+        tz = dateutil.tz.gettz(groups['tz'])
+        ts = ts.replace(tzinfo=tz)
     ts = pandas.Timestamp(ts)
     return ts
 
