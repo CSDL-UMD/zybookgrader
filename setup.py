@@ -12,6 +12,7 @@ kwargs = dict(
     packages=find_packages(),
     install_requires=[
         'pandas>=0.22',
+        'dateutil'
     ],
     entry_points={
         'console_scripts': [
