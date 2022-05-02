@@ -123,7 +123,7 @@ def matchdatefromfilename(s):
     """
     m = re.search(PAT_TS, s)
     if m is None:
-        print("Error: not a valid grade file: {}".format(p.name),
+        print("Error: not a valid grade file: {}".format(s),
                 file=sys.stderr)
         sys.exit(1)
     ts = m.group()
