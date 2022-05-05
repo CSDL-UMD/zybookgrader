@@ -135,7 +135,12 @@ def matchdatefromfilename(s):
     if 'tz' in groups and groups['tz'] is not None:
         tz = dateutil.tz.gettz(groups['tz'])
         ts = ts.replace(tzinfo=tz)
-        ts = pandas.Timestamp(ts).astimezone(datetime.timezone.utc)
+        ts = pandas.Timestamp(ts)
+        try:
+           ts = ts.astimezone(datetime.timezone.utc)
+        except TypeError:
+            # This happens on Windows only...
+            pass
     else:
         ts = pandas.Timestamp(ts)
     return ts
