@@ -71,7 +71,8 @@ def readassignment(path):
           .rename(columns=str.lower)
           .rename(columns=lambda k: k.replace(" ", "_"))
           .assign(due_date=lambda k: k['due_date'].apply(pandas.Timestamp))
-          .assign(due_date=lambda k: k['due_date'].dt.tz_convert("UTC"))
+          .assign(due_date=lambda k: \
+                  k['due_date'].dt.tz_convert(datetime.timezone.utc))
           .pipe(droptotals)
           .pipe(dropmisc)
           .pipe(topoints)
@@ -134,7 +135,7 @@ def matchdatefromfilename(s):
     if 'tz' in groups and groups['tz'] is not None:
         tz = dateutil.tz.gettz(groups['tz'])
         ts = ts.replace(tzinfo=tz)
-        ts = pandas.Timestamp(ts).astimezone("UTC")
+        ts = pandas.Timestamp(ts).astimezone(datetime.timezone.utc)
     else:
         ts = pandas.Timestamp(ts)
     return ts
