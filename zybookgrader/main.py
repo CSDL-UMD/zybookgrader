@@ -2,7 +2,6 @@
 
 import os
 import datetime
-import dateutil.tz
 import sys
 import re
 import argparse
@@ -133,16 +132,10 @@ def matchdatefromfilename(s):
     ts = groups['timestamp']
     ts = datetime.datetime.strptime(ts, PAT_TS_STRPTIME)
     if 'tz' in groups and groups['tz'] is not None:
-        tz = dateutil.tz.gettz(groups['tz'])
-        ts = ts.replace(tzinfo=tz)
         print(">> {} (datetime)".format(ts.isoformat()))
-        ts = pandas.Timestamp(ts)
+        ts = pandas.Timestamp("{} {}".format(ts.isoformat(), groups['tz']))
+        ts = ts.tz_convert(datetime.timezone.utc)
         print("^^ {} (pandas Timestamp)".format(ts))
-        try:
-           ts = ts.astimezone(datetime.timezone.utc)
-        except TypeError:
-            # This happens on Windows only...
-            pass
     else:
         ts = pandas.Timestamp(ts)
     return ts
